@@ -1,4 +1,8 @@
-public class FieldInfo {
+package field;
+
+import java.io.Serializable;
+
+public class FieldInfo implements Serializable {
     public boolean open;
     public boolean ship;
 

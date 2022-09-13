@@ -1,47 +1,76 @@
+package udp;
+
+import enums.Action;
+import field.FieldInfo;
+import windows.Window;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class Server {
 
-
-    private FieldInfo[][] player1Fields;
-    private FieldInfo[][] player2Fields;
+    Map<String, FieldInfo[][]> players;
 
     public Server(){
 
-        initializeBoard();
+        //Initialize Game board
+        ArrayList<FieldInfo[][]> boards = initializeBoard();
+        players= new HashMap<String, FieldInfo[][]>();
+
+
+
 
         DatagramSocket aSocket = null ;
-
-
         try{
             aSocket = new DatagramSocket(3080);
-            byte [] buffer = new byte [1000];
-            while(true){
-                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+
+            //wait two players to connect
+            byte [] input = new byte [3];
+            byte [] output;
+            int countPlayers = 0;
+            while(countPlayers<2){
+                DatagramPacket request = new DatagramPacket(input, input.length);
                 System.out.println("Aguradando...");
                 aSocket.receive(request);
-                DatagramPacket reply = new DatagramPacket(request.getData(), request.getLength(),
-                        request.getAddress(), request.getPort());
-                aSocket.send(reply);
+
+                if(input[0] == Action.CONNECT.getValor()) {
+                    players.put(request.getAddress().toString() + ":" + request.getPort(), boards.get(countPlayers));
+
+                    output = getBytes(boards.get(countPlayers));
+
+                    DatagramPacket reply = new DatagramPacket(output, output.length,
+                            request.getAddress(), request.getPort());
+                    aSocket.send(reply);
+                    countPlayers++;
+                }
             }
+
+            //Manage turns and plays
+            boolean won=false;
+            while(!won){
+
+            }
+
         }catch(Exception e){
             System.out.println("Erro na comunicação. Encerrando...");
+
         }
         finally {
             if ( aSocket != null) aSocket.close();
         }
 
 
-
     }
 
 
-    private void initializeBoard (){
+    private ArrayList<FieldInfo[][]> initializeBoard (){
 
-        player1Fields = new FieldInfo[8][10];
-        player2Fields = new FieldInfo[8][10];
+        FieldInfo[][] player1Fields = new FieldInfo[8][10];
+        FieldInfo[][] player2Fields = new FieldInfo[8][10];
 
         //Initialize array
         loop1:for(int i=0; i<player1Fields.length; i++) {
@@ -86,6 +115,12 @@ public class Server {
             }while(cantSet);
 
         }
+
+        ArrayList<FieldInfo[][]> boards = new ArrayList<FieldInfo[][]>(2);
+        boards.add(player1Fields);
+        boards.add(player2Fields);
+
+        return boards;
     }
 
     private void setShip(int length, boolean invertDirection, int direction, int line, int column, FieldInfo[][] playerFields){
@@ -145,5 +180,26 @@ public class Server {
         return false;
     }
 
+
+    private byte[] getBytes(FieldInfo[][] board){
+
+        byte[] output = new byte[board.length*board[0].length + 3];
+
+        output[0] = Action.CONFIRMCONNECTION.getValor();
+        output[1] = (byte)board.length;
+        output[2] = (byte)board[0].length;
+
+        int count = 3;
+        for(int i=0; i<board.length; i++){
+            for(int j=0; j<board[0].length; j++){
+
+                if(board[i][j].isShip()) {
+                    output[count] = 1;
+                }
+                count++;
+            }
+        }
+        return output;
+    }
 
 }

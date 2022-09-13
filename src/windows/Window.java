@@ -1,3 +1,8 @@
+package windows;
+
+import field.Field;
+import field.FieldInfo;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -29,7 +34,7 @@ public class Window extends JFrame{
     Field[][] player1Fields;
     Field[][] player2Fields;
 
-    public Window(FieldInfo[][] p1Informations, FieldInfo[][] p2Informations){
+    public Window(FieldInfo[][] p1Informations){
 
         lines = p1Informations.length;
         columns = p1Informations[0].length;
@@ -40,7 +45,7 @@ public class Window extends JFrame{
         for(int i=0; i<lines; i++){
             for(int j=0; j<columns; j++){
                 player1Fields[i][j] = new Field(p1Informations[i][j]);
-                player2Fields[i][j] = new Field(p2Informations[i][j]);
+                player2Fields[i][j] = new Field(new FieldInfo());
             }
         }
 
@@ -95,7 +100,7 @@ public class Window extends JFrame{
         }
 
 
-        setTitle("Client");
+        setTitle("udp.Client");
         setSize(1000,550);
         setVisible(true);
         setResizable(false);
