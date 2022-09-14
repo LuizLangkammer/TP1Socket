@@ -1,40 +1,42 @@
 package windows;
 
-import field.Field;
-import field.FieldInfo;
+import Classes.Field;
+import Classes.FieldInfo;
+import com.sun.tools.javac.Main;
+import udp.Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class Window extends JFrame{
+public class Window extends JFrame implements ActionListener {
 
     JLabel titleLB = new JLabel("Batalha Naval");
-    JLabel ipTitleLB = new JLabel("IP");
+    JLabel turnMessageLB = new JLabel("Aguardando Turno...");
     JLabel player1LB = new JLabel("Você");
     JLabel player2LB = new JLabel("Jogador 2");
 
-
-    JRadioButton tcpRB= new JRadioButton("TCP");
-    JRadioButton udpRB= new JRadioButton("UDP");
-    ButtonGroup protocol= new ButtonGroup();
-
-    JTextField ipTF= new JTextField(30);
 
     Font font= new Font("Times new Roman",Font.BOLD,30);
     Font font2= new Font("Times new Roman",Font.BOLD,20);
 
     Color black= new Color(0,0,0);
 
-    JPanel jp1 = new JPanel();
     JPanel divider = new JPanel();
-    JPanel jp2 = new JPanel();
+
 
     int lines, columns;
 
     Field[][] player1Fields;
     Field[][] player2Fields;
 
-    public Window(FieldInfo[][] p1Informations){
+    Client client;
+
+
+    public Window(FieldInfo[][] p1Informations, Client client){
+
+        this.client = client;
 
         lines = p1Informations.length;
         columns = p1Informations[0].length;
@@ -44,11 +46,10 @@ public class Window extends JFrame{
 
         for(int i=0; i<lines; i++){
             for(int j=0; j<columns; j++){
-                player1Fields[i][j] = new Field(p1Informations[i][j]);
-                player2Fields[i][j] = new Field(new FieldInfo());
+                player1Fields[i][j] = new Field(p1Informations[i][j], i+"/"+j);
+                player2Fields[i][j] = new Field(new FieldInfo(), i+"/"+j);
             }
         }
-
 
         setLayout(null);
 
@@ -56,19 +57,9 @@ public class Window extends JFrame{
         titleLB.setFont(font);
         titleLB.setBounds(410,20,450,30);
 
-        add(tcpRB);
-        tcpRB.setBounds(100,100,60,20);
-        add(udpRB);
-        udpRB.setBounds(160,100,60,20);
-        protocol.add(tcpRB);
-        protocol.add(udpRB);
-
-
-        add(ipTitleLB);
-        ipTitleLB.setBounds(300,80,50,20);
-        add(ipTF);
-        ipTF.setBounds(290,100,150,30);
-
+        add(turnMessageLB);
+        turnMessageLB.setFont(font2);
+        turnMessageLB.setBounds(380,60,450,30);
 
 
         add(player1LB);
@@ -95,7 +86,7 @@ public class Window extends JFrame{
                 button = player2Fields[i][j].getButton();
                 add(button);
                 button.setBounds(550+(j*40),175+(i*40),40,40);
-
+                button.addActionListener(this);
             }
         }
 
@@ -106,27 +97,31 @@ public class Window extends JFrame{
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+
     }
 
-    public void setBoard(FieldInfo[][] newPlayer1Fields, FieldInfo[][] newPlayer2Fields){
 
-        for(int i=0; i<lines;i++){
-            for(int j=0; j<columns; j++){
-                Field field = this.player1Fields[i][j];
-
-
-                field.setShowShip(true);
-                field.setShip(newPlayer1Fields[i][j].ship);
-                field.setOpen(newPlayer1Fields[i][j].open);
-
-                field = this.player2Fields[i][j];
-
-
-                field.setShowShip(false);
-                field.setShip(newPlayer2Fields[i][j].ship);
-                field.setOpen(newPlayer2Fields[i][j].open);
-            }
-        }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        JButton button = (JButton)e.getSource();
+        String name = button.getName();
+        String[] coordinates = name.split("/");
+        client.play(Byte.parseByte(coordinates[0]), Byte.parseByte(coordinates[1]));
     }
+
+    public void setMessage (String title){
+        turnMessageLB.setText(title);
+    }
+
+    public void setField(byte i, byte j, boolean hit){
+        player2Fields[i][j].setOpen(hit);
+    }
+
+    public void setField(byte i, byte j){
+        player1Fields[i][j].setOpen();
+    }
+
+
 
 }

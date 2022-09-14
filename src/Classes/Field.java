@@ -1,4 +1,4 @@
-package field;
+package Classes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +16,9 @@ public class Field {
 
     private boolean showShip;
 
-    public Field(FieldInfo information){
+    public Field(FieldInfo information, String name){
         button = new JButton();
+        button.setName(name);
         this.open= information.open;
         this.ship = information.ship;
         if(ship){
@@ -44,28 +45,27 @@ public class Field {
         return button;
     }
 
-    public void setOpen(boolean open) {
-        if(open && !this.open){
-            if(!ship){
-                button.setBackground(lightBlue);
-            }else{
+    public void setOpen(boolean hit) {
+
+            if(hit){
                 button.setBackground(red);
+            }else{
+                button.setBackground(lightBlue);
             }
             this.open = true;
+
+    }
+
+    public void setOpen() {
+
+        if(ship){
+            button.setBackground(red);
+        }else{
+            button.setBackground(lightBlue);
         }
+        this.open = true;
+
     }
 
-    public void setShip(boolean ship) {
-        if(ship && !this.ship) {
-            if (showShip) {
-                button.setBackground(grey);
-            }
 
-            this.ship = true;
-        }
-    }
-
-    public void setShowShip(boolean showShip) {
-        this.showShip = showShip;
-    }
 }

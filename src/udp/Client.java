@@ -1,7 +1,7 @@
 package udp;
 
 import enums.Action;
-import field.FieldInfo;
+import Classes.FieldInfo;
 import windows.Window;
 
 import java.net.DatagramPacket;
@@ -12,16 +12,23 @@ public class Client {
 
 
     FieldInfo[][] board;
+    boolean myTurn = false;
+
+    String ipAddress;
+
+    DatagramSocket aSocket;
+
+    Window window;
 
     public Client(String ipAddress){
 
+        this.ipAddress = ipAddress;
 
-        DatagramSocket aSocket = null;
         try {
             aSocket = new DatagramSocket();
 
             //Connect to server
-            byte [] connectionMessage = {Action.CONNECT.getValor(), 0, 0};
+            byte [] connectionMessage = {Action.CONNECT.getValue(), 0, 0};
             InetAddress aHost = InetAddress.getByName(ipAddress);
             int serverPort = 3080;
             DatagramPacket request =
@@ -32,20 +39,97 @@ public class Client {
             aSocket.receive(reply);
 
             board = buildBoard(answer);
+            window = new Window(board, this);
 
-            Window window = new Window(board);
 
-            //Start Game
+            waitForTurn();
 
         }
         catch(Exception e){
+            e.printStackTrace();
+            if(window!=null){
+                window.setMessage("Falha de Comunicação");
+            }
             System.out.println("Erro na comunicação. Encerrando...");
-        }
-        finally {
-            if ( aSocket != null) aSocket.close();
         }
 
     }
+
+    public void waitForTurn(){
+        window.setMessage("Aguardando turno");
+        try{
+            DatagramPacket receiver = null;
+            byte[] response = new byte[3];
+            receiver = new DatagramPacket(response, response.length);
+            System.out.println("Waiting server");
+            aSocket.receive(receiver);
+
+            if(response[0] == Action.YOURTURN.getValue()){
+                window.setMessage("Sua vez!");
+                myTurn = true;
+                System.out.println("Playing");
+            }else{
+                if(response[0] == Action.OPEN.getValue()){
+                    window.setField(response[1], response[2]);
+                    window.setMessage("Sua vez!");
+                    myTurn = true;
+                }
+            }
+
+        }catch (Exception e) {
+            if (window != null) {
+                window.setMessage("Falha de Comunicação");
+            }
+            System.out.println("Erro na comunicação");
+        }
+
+    }
+
+
+    public void play(byte i, byte j){
+        if(myTurn) {
+            System.out.println("Playing");
+            DatagramPacket messanger = null;
+            DatagramPacket receiver = null;
+            byte[] message = new byte[3];
+            byte[] response = new byte[3];
+            try {
+                //Send play to server
+                message[0] = Action.OPEN.getValue();
+                message[1] = i;
+                message[2] = j;
+                messanger = new DatagramPacket(message, message.length, InetAddress.getByName(ipAddress), 3080);
+                System.out.println("Sending Play");
+                aSocket.send(messanger);
+                myTurn = false;
+                //wait server to answer the result
+                receiver = new DatagramPacket(response, response.length);
+                System.out.println("Waiting response");
+                aSocket.receive(receiver);
+
+                if(response[0] == Action.HIT.getValue() || response[0] == Action.NOTHIT.getValue()){
+                    window.setField(i,j,response[0] == Action.HIT.getValue());
+                    gambi();
+                }else{
+                    if(response[0] == Action.WON.getValue()){
+                        window.setField(i,j,true);
+                        window.setMessage("Você Venceu!!!!!!!");
+                    }
+                }
+
+            } catch (Exception e) {
+                if (window != null) {
+                    window.setMessage("Falha de Comunicação");
+                }
+                System.out.println("Erro na comunicação");
+            }
+        }
+    }
+
+    public void gambi(){
+        waitForTurn();
+    }
+
 
 
     private FieldInfo[][] buildBoard(byte[] input){
