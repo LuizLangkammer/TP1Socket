@@ -41,9 +41,7 @@ public class Client {
             board = buildBoard(answer);
             window = new Window(board, this);
 
-
             waitForTurn();
-
         }
         catch(Exception e){
             e.printStackTrace();
@@ -56,32 +54,41 @@ public class Client {
     }
 
     public void waitForTurn(){
-        window.setMessage("Aguardando turno");
-        try{
-            DatagramPacket receiver = null;
-            byte[] response = new byte[3];
-            receiver = new DatagramPacket(response, response.length);
-            System.out.println("Waiting server");
-            aSocket.receive(receiver);
 
-            if(response[0] == Action.YOURTURN.getValue()){
-                window.setMessage("Sua vez!");
-                myTurn = true;
-                System.out.println("Playing");
-            }else{
-                if(response[0] == Action.OPEN.getValue()){
-                    window.setField(response[1], response[2]);
-                    window.setMessage("Sua vez!");
-                    myTurn = true;
+        window.setMessage("Aguardando turno");
+
+        new Thread(){
+            @Override
+            public void run() {
+                try{
+                    DatagramPacket receiver = null;
+                    byte[] response = new byte[3];
+                    receiver = new DatagramPacket(response, response.length);
+                    System.out.println("Waiting server");
+                    aSocket.receive(receiver);
+
+                    if(response[0] == Action.YOURTURN.getValue()){
+                        window.setMessage("Sua vez!");
+                        myTurn = true;
+                        System.out.println("Playing");
+                    }else{
+                        if(response[0] == Action.OPEN.getValue()){
+                            window.setField(response[1], response[2]);
+                            window.setMessage("Sua vez!");
+                            myTurn = true;
+                        }
+                    }
+
+                }catch (Exception e) {
+                    if (window != null) {
+                        window.setMessage("Falha de Comunicação");
+                    }
+                    System.out.println("Erro na comunicação");
                 }
             }
 
-        }catch (Exception e) {
-            if (window != null) {
-                window.setMessage("Falha de Comunicação");
-            }
-            System.out.println("Erro na comunicação");
-        }
+        }.start();
+
 
     }
 
