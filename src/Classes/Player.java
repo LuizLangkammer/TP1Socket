@@ -8,6 +8,8 @@ public class Player {
     public InetAddress ipAddress;
     public int port;
 
+    public int point;
+
     public Player(InetAddress ipAddress, int port, FieldInfo[][] board){
         this.board = board;
         this.ipAddress = ipAddress;

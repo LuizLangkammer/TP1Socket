@@ -6,7 +6,7 @@ public enum Action {
         YOURTURN((byte)3),
         OPEN((byte) 4),
         HIT((byte)5), NOTHIT((byte)6),
-        WON((byte)7);
+        WON((byte)7), LOST((byte)8);
 
         private final byte value;
 

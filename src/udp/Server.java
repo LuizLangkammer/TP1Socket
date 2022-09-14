@@ -32,7 +32,6 @@ public class Server {
             int countPlayers = 0;
             while(countPlayers<2){
                 DatagramPacket request = new DatagramPacket(input, input.length);
-                System.out.println("Aguradando...");
                 aSocket.receive(request);
 
                 if(input[0] == Action.CONNECT.getValue()) {
@@ -75,20 +74,35 @@ public class Server {
 
                     receiver = new DatagramPacket(response, response.length);
                     do{
-                        System.out.println("Waiting player "+i);
                         aSocket.receive(receiver);
                     }while(!receiver.getAddress().equals(player.ipAddress) || receiver.getPort() != player.port);
 
                     if(response[0] == Action.OPEN.getValue()){
 
+                        enemyPlayer.board[response[1]][response[2]].setOpen(true);
+
                         //Play feedback ============================================
                         if(enemyPlayer.board[response[1]][response[2]].ship){
+                            player.point++;
                             message[0] = Action.HIT.getValue();
                         }else{
                             message[0] = Action.NOTHIT.getValue();
                         }
+
+                        if(player.point == 9){
+                            message[0] = Action.WON.getValue();
+                            messanger = new DatagramPacket(message, message.length, player.ipAddress, player.port);
+                            aSocket.send(messanger);
+                            message[0] = Action.LOST.getValue();
+                            message[1] = response[1];
+                            message[2] = response[2];
+                            messanger = new DatagramPacket(message, message.length, enemyPlayer.ipAddress, enemyPlayer.port);
+                            aSocket.send(messanger);
+                            won = true;
+                            break;
+                        }
+
                         messanger = new DatagramPacket(message, message.length, player.ipAddress, player.port);
-                        System.out.println("Player "+i+" feedback");
                         aSocket.send(messanger);
 
                         //Play notification
@@ -96,7 +110,7 @@ public class Server {
                         message[1] = response[1];
                         message[2] = response[2];
                         messanger = new DatagramPacket(message, message.length, enemyPlayer.ipAddress, enemyPlayer.port);
-                        System.out.println("Player turn");
+
                         aSocket.send(messanger);
                     }
                 }

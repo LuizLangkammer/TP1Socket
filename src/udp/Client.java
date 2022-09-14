@@ -64,18 +64,21 @@ public class Client {
                     DatagramPacket receiver = null;
                     byte[] response = new byte[3];
                     receiver = new DatagramPacket(response, response.length);
-                    System.out.println("Waiting server");
                     aSocket.receive(receiver);
 
                     if(response[0] == Action.YOURTURN.getValue()){
                         window.setMessage("Sua vez!");
                         myTurn = true;
-                        System.out.println("Playing");
                     }else{
                         if(response[0] == Action.OPEN.getValue()){
                             window.setField(response[1], response[2]);
                             window.setMessage("Sua vez!");
                             myTurn = true;
+                        }
+                        if(response[0] == Action.LOST.getValue()){
+                            window.setField(response[1], response[2]);
+                            window.setMessage("Perdemos");
+                            myTurn = false;
                         }
                     }
 
@@ -95,7 +98,6 @@ public class Client {
 
     public void play(byte i, byte j){
         if(myTurn) {
-            System.out.println("Playing");
             DatagramPacket messanger = null;
             DatagramPacket receiver = null;
             byte[] message = new byte[3];
@@ -106,17 +108,15 @@ public class Client {
                 message[1] = i;
                 message[2] = j;
                 messanger = new DatagramPacket(message, message.length, InetAddress.getByName(ipAddress), 3080);
-                System.out.println("Sending Play");
                 aSocket.send(messanger);
                 myTurn = false;
                 //wait server to answer the result
                 receiver = new DatagramPacket(response, response.length);
-                System.out.println("Waiting response");
                 aSocket.receive(receiver);
 
                 if(response[0] == Action.HIT.getValue() || response[0] == Action.NOTHIT.getValue()){
                     window.setField(i,j,response[0] == Action.HIT.getValue());
-                    gambi();
+                    waitForTurn();
                 }else{
                     if(response[0] == Action.WON.getValue()){
                         window.setField(i,j,true);
@@ -133,9 +133,6 @@ public class Client {
         }
     }
 
-    public void gambi(){
-        waitForTurn();
-    }
 
 
 
