@@ -1,9 +1,9 @@
 package windows;
 
+import Classes.Client;
 import Classes.Field;
 import Classes.FieldInfo;
-import com.sun.tools.javac.Main;
-import udp.Client;
+import udp.UDPClient;
 
 import javax.swing.*;
 import java.awt.*;

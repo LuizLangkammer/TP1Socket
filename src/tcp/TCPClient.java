@@ -1,47 +1,44 @@
-package udp;
+package tcp;
 
-import enums.Action;
+import Classes.Client;
 import Classes.FieldInfo;
+import enums.Action;
 import windows.Window;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 
-public class Client {
+public class TCPClient extends Client {
+
+    DataInputStream in;
+
+    DataOutputStream out;
 
 
-    FieldInfo[][] board;
-    boolean myTurn = false;
 
-    String ipAddress;
+    public TCPClient(String ipAddress){
 
-    DatagramSocket aSocket;
 
-    Window window;
 
-    public Client(String ipAddress){
-
-        this.ipAddress = ipAddress;
-
+        Socket socket = null;
         try {
-            aSocket = new DatagramSocket();
+            socket = new Socket(ipAddress, 3080);
 
-            //Connect to server
-            byte [] connectionMessage = {Action.CONNECT.getValue(), 0, 0};
-            InetAddress aHost = InetAddress.getByName(ipAddress);
-            int serverPort = 3080;
-            DatagramPacket request =
-                    new DatagramPacket(connectionMessage,  connectionMessage.length, aHost, serverPort);
-            aSocket.send(request);
-            byte[] answer = new byte[1000];
-            DatagramPacket reply = new DatagramPacket(answer, answer.length);
-            aSocket.receive(reply);
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+
+            byte[] answer = new byte[500];
+            in.read(answer);
 
             board = buildBoard(answer);
             window = new Window(board, this);
 
             waitForTurn();
+
         }
         catch(Exception e){
             e.printStackTrace();
@@ -61,10 +58,8 @@ public class Client {
             @Override
             public void run() {
                 try{
-                    DatagramPacket receiver = null;
                     byte[] response = new byte[3];
-                    receiver = new DatagramPacket(response, response.length);
-                    aSocket.receive(receiver);
+                    in.read(response);
 
                     if(response[0] == Action.YOURTURN.getValue()){
                         window.setMessage("Sua vez!");
@@ -98,8 +93,7 @@ public class Client {
 
     public void play(byte i, byte j){
         if(myTurn) {
-            DatagramPacket messanger = null;
-            DatagramPacket receiver = null;
+
             byte[] message = new byte[3];
             byte[] response = new byte[3];
             try {
@@ -107,12 +101,10 @@ public class Client {
                 message[0] = Action.OPEN.getValue();
                 message[1] = i;
                 message[2] = j;
-                messanger = new DatagramPacket(message, message.length, InetAddress.getByName(ipAddress), 3080);
-                aSocket.send(messanger);
+                out.write(message);
                 myTurn = false;
                 //wait server to answer the result
-                receiver = new DatagramPacket(response, response.length);
-                aSocket.receive(receiver);
+                in.read(response);
 
                 if(response[0] == Action.HIT.getValue() || response[0] == Action.NOTHIT.getValue()){
                     window.setField(i,j,response[0] == Action.HIT.getValue());
@@ -133,25 +125,5 @@ public class Client {
         }
     }
 
-
-
-
-    private FieldInfo[][] buildBoard(byte[] input){
-
-        FieldInfo[][] board = new FieldInfo[input[1]][input[2]];
-
-        int count = 3;
-        for(int i=0; i<input[1]; i++){
-            for(int j=0; j<input[2]; j++){
-                board[i][j] = new FieldInfo();
-                if(input[count]==1){
-                    board[i][j].setShip(true);
-                }
-                count++;
-            }
-        }
-
-        return board;
-    }
 
 }

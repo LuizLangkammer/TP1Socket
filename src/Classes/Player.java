@@ -1,19 +1,17 @@
 package Classes;
 
-import java.net.InetAddress;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 
-public class Player {
+public abstract class Player {
+
 
     public FieldInfo[][] board;
-    public InetAddress ipAddress;
-    public int port;
 
     public int point;
 
-    public Player(InetAddress ipAddress, int port, FieldInfo[][] board){
+    public Player(FieldInfo[][] board){
         this.board = board;
-        this.ipAddress = ipAddress;
-        this.port = port;
     }
 
 }
