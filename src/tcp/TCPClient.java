@@ -11,6 +11,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Random;
 
 public class TCPClient extends Client {
 
@@ -59,16 +60,23 @@ public class TCPClient extends Client {
             public void run() {
                 try{
                     byte[] response = new byte[3];
+                    System.out.println("Waiting turn");
                     in.read(response);
-
+                    System.out.println("Received turn");
                     if(response[0] == Action.YOURTURN.getValue()){
                         window.setMessage("Sua vez!");
                         myTurn = true;
+                        Thread.sleep(800);
+                        Random random = new Random();
+                        play((byte)random.nextInt(8), (byte)random.nextInt(10));
                     }else{
                         if(response[0] == Action.OPEN.getValue()){
                             window.setField(response[1], response[2]);
                             window.setMessage("Sua vez!");
                             myTurn = true;
+                            Thread.sleep(500);
+                            Random random = new Random();
+                            play((byte)random.nextInt(8), (byte)random.nextInt(10));
                         }
                         if(response[0] == Action.LOST.getValue()){
                             window.setField(response[1], response[2]);
@@ -101,10 +109,14 @@ public class TCPClient extends Client {
                 message[0] = Action.OPEN.getValue();
                 message[1] = i;
                 message[2] = j;
+               // Thread.sleep(200);
+                System.out.println("Sending play");
                 out.write(message);
                 myTurn = false;
                 //wait server to answer the result
+                System.out.println("Waiting play feedback");
                 in.read(response);
+                System.out.println("Received feedback");
 
                 if(response[0] == Action.HIT.getValue() || response[0] == Action.NOTHIT.getValue()){
                     window.setField(i,j,response[0] == Action.HIT.getValue());

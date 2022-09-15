@@ -62,7 +62,9 @@ public class TCPServer extends Server {
                     }
 
                     //Wait play ====================================================================
+                    System.out.println("Waiting play");
                     player.in.read(response);
+                    System.out.println("Play received");
                     if(response[0] == Action.OPEN.getValue()){
                         enemyPlayer.board[response[1]][response[2]].setOpen(true);
 
@@ -73,7 +75,7 @@ public class TCPServer extends Server {
                         }else{
                             message[0] = Action.NOTHIT.getValue();
                         }
-
+                        //Thread.sleep(200);
                         if(player.point == 9){
                             message[0] = Action.WON.getValue();
                             player.out.write(message);
@@ -85,12 +87,14 @@ public class TCPServer extends Server {
                             break;
                         }
 
+                        System.out.println("Send play feedback");
                         player.out.write(message);
 
                         //Play notification
                         message[0] = Action.OPEN.getValue();
                         message[1] = response[1];
                         message[2] = response[2];
+                        System.out.println("Send play feedback");
                         enemyPlayer.out.write(message);
                     }
                 }
